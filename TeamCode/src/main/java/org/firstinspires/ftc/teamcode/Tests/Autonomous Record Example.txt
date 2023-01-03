@@ -1,0 +1,141 @@
+"Our team wrote a simple RobotC program for "recording" autonomous programs.
+If there are sections of your program that rely on "timed" motor commands
+("move forward for 2 seconds"), you can speed up autonomous development by
+using this program. In essence, you start the program, drive your robot with
+the joystick for 30 seconds as you would during teleop, and then replay the
+sequence of commands. I'll add a system for saving/recalling from NXT files
+to allow for multiple programs; right now, it's a record-replay sort of thing
+(one replay per recording). That could easily be modified. The current version
+stores the messages as an array of TJoystick instances, which is rather inefficient,
+and only allows a 10 Hz "framerate" (if you want to call it that), since the
+NXT's "RAM" can't hold more than roughly 30 seconds * 10 updates/second = 300 TJoystick
+instances. When I add file access, or do some memory optimization, this should
+allow a more workable 30 - 60 updates/second, which will feel more natural to drive.
+
+Anyway, here's the code. Enjoy!"
+
+// Place #pragma statements here.
+
+#include "JoystickDriver.c" // Handle joystick messages.
+
+
+//////////////////////////////////////////////
+// Function Prototypes and Global Variables //
+//////////////////////////////////////////////
+
+const int secondsInAutonomous = 30;
+const int updatesPerSecond = 10;
+TJoystick joystickHistory[secondsInAutonomous * updatesPerSecond];
+
+// Function prototypes.
+void initializeRobot();
+short joyBtn(byte controller, int btn, TJoystick * joystickSource);
+void runRobot(TJoystick * joystickSource);
+void stopRobot();
+void readToArray();
+void playbackArray();
+
+
+//////////
+// Main //
+//////////
+
+task main()
+{
+   disableDiagnosticsDisplay(); // Don't display robot diagnostics.
+
+   eraseDisplay();
+   nxtDisplayCenteredTextLine(0, "Press orange button");
+   nxtDisplayCenteredTextLine(1, "to start recording.");
+
+   // Wait until user presses orange button.
+   while (nNxtButtonPressed != 3) { wait1Msec(10); }
+
+   wait1Msec(250); // Wait a little to begin recording.  
+
+   eraseDisplay();
+
+   nxtDisplayCenteredTextLine(0, "Recording...");
+
+   initializeRobot();
+   readToArray(); // Record TJoysticks in array while running the robot.
+   stopRobot();
+
+   eraseDisplay();
+   nxtDisplayCenteredTextLine(0, "Press orange button");
+   nxtDisplayCenteredTextLine(1, "to replay recording.");
+
+   // Wait until user presses orange button.
+   while (nNxtButtonPressed != 3) { wait1Msec(10); }
+
+   wait1Msec(250); // Wait a little to begin.
+
+   initializeRobot();
+   playbackArray(); // Replay the recorded sequence of joystick messages.
+   stopRobot();
+}
+
+
+//////////////////////////
+// Function Definitions //
+//////////////////////////
+
+void initializeRobot()
+{
+   // Place any initialization logic here (servos, sensors, etc.). 
+}
+
+// Custom joyBtn function; accepts pointer to TJoystick as argument.
+// Pass either 1 or 2 to refer to the first or second controller.  
+// Use in place of joy1Btn and joy2Btn functions.  
+short joyBtn(byte controller, int btn, TJoystick * joystickSource)
+{
+   if (controller == 1)
+      return ((joystickSource->joy1_Buttons & (1 << (btn - 1))) != 0);
+   if (controller == 2)
+      return ((joystickSource->joy2_Buttons & (1 << (btn - 1))) != 0);
+   return 0;
+}
+
+// Read joystick and button values to variables, run motors and servos. 
+void runRobot(TJoystick * joystickSource)
+{
+   // This function should essentially contain your teleop code.  
+   // Make sure to access *joystickSource instead of joystick when reading from the controllers.
+   // joystickSource is a pointer to a TJoystick, *joystickSource is the TJoystick it points to.  
+   // For example, replace joystick.joy1_y1 with (*joystickSource).joy1_y1, or joystickSource->joy1_y1 (both are equivalent).  
+   // Replace calls to joy1Btn and joy2Btn with calls to joyBtn, which accepts controller #, button #, and a pointer (see above).  
+   // For example: int buttonPress = joyBtn(1, 5, joystickSource). This would access button 5 from controller 1 of joystickSource.  
+}
+
+// Stops the robot.  
+void stopRobot()
+{
+   // Place code here for stopping all motion.  
+   // This function will be called at the end of the recording to prevent the robot from running away.  
+}
+
+// Record joystick states while driving.
+// You don't need to modify this function.  
+void readToArray()
+{
+   for (int i = 0; i < secondsInAutonomous * updatesPerSecond; i++)
+   {
+      getJoystickSettings(joystick);
+      // Copy from joystick to the joystickHistory array.  
+      memcpy(&joystickHistory[i], &joystick, sizeof(joystick));     
+      runRobot(&joystick);
+      wait1Msec(1000 / updatesPerSecond);
+   }
+}
+
+// Feed recorded joystick states back to robot.
+// This function also does not need to be modified.  
+void playbackArray()
+{
+   for (int i = 0; i < secondsInAutonomous * updatesPerSecond; i++)
+   {
+      runRobot(&joystickHistory[i]);
+      wait1Msec(1000 / updatesPerSecond);
+   }
+}
