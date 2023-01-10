@@ -18,6 +18,7 @@ public class deHardwareMap {
     public Servo vClaw  = null;
     public Servo hClaw = null;
     public Servo cClaw = null;
+    public Servo turretStop = null;
 
     HardwareMap hwmap = null;
 
@@ -39,6 +40,7 @@ public class deHardwareMap {
         vClaw = hwmap.get(Servo.class, "vClaw");
         cClaw = hwmap.get(Servo.class, "cClaw");
         hClaw = hwmap.get(Servo.class, "hClaw");
+        turretStop = hwmap.get(Servo.class, "turretStop");
 /*
         armTwist = hwmap.get(Servo.class, "armtwist");
 */

@@ -99,6 +99,12 @@ public class firstTeleop extends OpMode {
         }
 
 
+        if (gamepad1.y) {
+            robot.turretStop.setPosition(0);
+        } else if (gamepad1.x) {
+            robot.turretStop.setPosition(1);
+        }
+
     }
 
 }
