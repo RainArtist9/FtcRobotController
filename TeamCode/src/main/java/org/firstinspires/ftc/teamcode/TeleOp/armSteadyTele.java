@@ -9,10 +9,6 @@ import org.firstinspires.ftc.teamcode.deHardwareMap;
 @TeleOp(name = "ArmStrong", group = "armstrong")
 public class armSteadyTele extends OpMode {
 
-    /* *
-    This is the test method for Teleop that will keep the arm steady.
-     */
-
     deHardwareMap robot = new deHardwareMap();
 
     public double drive = 0d;
@@ -21,14 +17,15 @@ public class armSteadyTele extends OpMode {
     public double turretval = 0d;
     public double armyval = 0d;
 
+    public double turretMult = .8;
+
+    public boolean buttonActivate = true;
     public boolean canItTurn = true;
-    public boolean buttonIsPressed = false;
+    public boolean listenToGamepad = true;
 
     @Override
     public void init() {
         robot.init(hardwareMap);
-        robot.army.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.army.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     @Override
@@ -36,12 +33,13 @@ public class armSteadyTele extends OpMode {
         /*double drive = gamepad1.left_stick_y;
         double strafe = gamepad1.left_stick_x;
         double twist = gamepad1.right_stick_x;
+
 */
         drive = gamepad1.left_stick_y;
         strafe = gamepad1.left_stick_x;
         twist = gamepad1.right_stick_x;
         turretval = gamepad2.left_stick_x;
-        armyval = gamepad2.right_stick_y;
+        armyval = -gamepad2.right_stick_y;
 
         double[] speeds = {
                 (- twist - strafe - drive),
@@ -57,41 +55,53 @@ public class armSteadyTele extends OpMode {
         robot.backRight.setPower(speeds[2] * .65);
         robot.backLeft.setPower(speeds[3] * .65);
 
-        robot.turret.setPower(turretval * .5);
-//        robot.army.setPower(armyval * .3);
+        robot.turret.setPower(turretval * turretMult);
+        robot.army.setPower(armyval * .5);
 
-        if (gamepad2.a) {
+        if (gamepad2.b) {
             robot.vClaw.setPosition(0);
             canItTurn = false;
-            gamepad2.rumble(.5, .5, 300);
-        } else if (gamepad2.b) {
-            robot.vClaw.setPosition(0.5);
+        } else if (gamepad2.a) {
+            robot.vClaw.setPosition(0.3);
             canItTurn = true;
-            gamepad2.rumble(.5, .5, 300);
+        } else if (gamepad2.x) {
+            robot.vClaw.setPosition(.7);
         }
 
-        if (gamepad2.dpad_up) {
-            if (!buttonIsPressed) {
-                robot.army.setTargetPosition(200);
-                robot.army.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        if (gamepad2.right_bumper) {
+            robot.cClaw.setPosition(0);
+            canItTurn = false;
+        } else if (gamepad2.left_bumper) {
+            robot.cClaw.setPosition(1);
+            canItTurn = true;
+        }
+
+
+
+
+        if(gamepad2.y) {
+            if (listenToGamepad) {
+                if (buttonActivate) {
+                    turretMult = .5;
+                    buttonActivate = false;
+                } else if (!buttonActivate) {
+                    turretMult = .8;
+                    buttonActivate = false;
+                }
+                listenToGamepad = false;
             }
-            buttonIsPressed = true;
-        } else if (gamepad2.dpad_left || gamepad2.dpad_right) {
-            if (!buttonIsPressed) {
-                robot.army.setTargetPosition(100);
-                robot.army.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            }
-            buttonIsPressed = true;
-        } else if (gamepad2.dpad_down) {
-            if (!buttonIsPressed) {
-                robot.army.setTargetPosition(0);
-                robot.army.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            }
-            buttonIsPressed = true;
         } else {
-            buttonIsPressed = false;
+            listenToGamepad = true;
         }
 
+
+        if (gamepad1.y) {
+            robot.turretStop.setPosition(0);
+        } else if (gamepad1.x) {
+            robot.turretStop.setPosition(1);
+        }
 
     }
 
