@@ -26,6 +26,8 @@ public class armSteadyTele extends OpMode {
     @Override
     public void init() {
         robot.init(hardwareMap);
+        robot.army.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.army.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     @Override
@@ -56,7 +58,7 @@ public class armSteadyTele extends OpMode {
         robot.backLeft.setPower(speeds[3] * .65);
 
         robot.turret.setPower(turretval * turretMult);
-        robot.army.setPower(armyval * .5);
+//        robot.army.setPower(armyval * .5);
 
         if (gamepad2.b) {
             robot.vClaw.setPosition(0);
@@ -103,6 +105,20 @@ public class armSteadyTele extends OpMode {
             robot.turretStop.setPosition(1);
         }
 
+
+        if (gamepad1.dpad_up) {
+            robot.army.setTargetPosition(0);
+        } else if (gamepad1.dpad_down) {
+            robot.army.setTargetPosition(400);
+        } else if (gamepad1.dpad_right || gamepad1.dpad_left) {
+            robot.army.setTargetPosition(200);
+        }
+
+
+
+
+
+        robot.army.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
 }
